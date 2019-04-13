@@ -28,7 +28,7 @@ install:
     - pip install -e .
 
 script:
-    - pytest --codestyle
+    - pytest --codestyle crust
              --cov crust
              --ignore=Genesis2/
              -v --cov-report term-missing tests
