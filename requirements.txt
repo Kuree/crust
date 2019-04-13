@@ -1,3 +1,4 @@
 -e git://github.com/Kuree/gemstone.git#egg=gemstone
 -e git://github.com/Kuree/canal.git#egg=canal
 pyverilog
+pyvcd

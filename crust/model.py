@@ -2,6 +2,7 @@ from canal.interconnect import Interconnect, InterconnectGraph
 from canal.circuit import Node, RegisterNode, PortNode
 from typing import Dict, Set, Tuple, List, Union
 from gemstone.common.core import Core
+from crust.vcd import ModelVCD
 
 
 class InterconnectModel:
@@ -27,6 +28,12 @@ class InterconnectModel:
 
         # sort to get the eval order
         self.__eval_nodes = self.__topological_sort()
+
+        # optional vcd
+        self.__model_vcd: Union[None, ModelVCD] = None
+
+    def attach_vcd(self, vcd: ModelVCD):
+        self.__model_vcd = vcd
 
     def eval(self):
         # eval in order
@@ -64,6 +71,10 @@ class InterconnectModel:
                 result_name = node.name
                 value = result[result_name] if result_name in result else 0
                 self._values[node] = value
+
+        # vcd
+        if self.__model_vcd is not None:
+            self.__model_vcd.eval(tick=True)
 
         # propagate the register value
         for node in self._reg_values:

@@ -1,9 +1,14 @@
 from crust.model import *
 from gemstone.common.dummy_core_magma import DummyCore
 from canal.util import *
+import pytest
+from crust.vcd import *
+import tempfile
+import os
 
 
-def test_simulation():
+@pytest.fixture
+def interconnect_route():
     addr_width = 8
     data_width = 32
     bit_widths = [1, 16]
@@ -87,12 +92,20 @@ def test_simulation():
 
     # two paths
     route_path = [first_path, second_path]
+
+    return interconnect, route_path
+
+
+def test_simulation(interconnect_route):
+    interconnect, route_path = interconnect_route
+
     compiler = InterconnectModelCompiler(interconnect)
     compiler.configure_route(route_path)
     # no instruction as we are using dummy
     model = compiler.compile()
 
     # poke values
+    first_path, second_path = route_path
     start = first_path[0]
     end = second_path[-1]
 
@@ -106,3 +119,34 @@ def test_simulation():
         if idx > 0:
             # one pipeline register
             assert model.get_value(end) == values[idx - 1]
+
+
+def test_vcd(interconnect_route):
+    interconnect, route_path = interconnect_route
+
+    compiler = InterconnectModelCompiler(interconnect)
+    compiler.configure_route(route_path)
+    # no instruction as we are using dummy
+    model = compiler.compile()
+
+    with tempfile.TemporaryDirectory() as tempdir:
+        filename = os.path.join(tempdir, "test.vcd")
+        with ModelVCD(model, filename) as vcd:
+            model.attach_vcd(vcd)
+
+            # poke values
+            first_path, second_path = route_path
+            start = first_path[0]
+            end = second_path[-1]
+
+            num_data_points = 10
+            values = []
+            for i in range(num_data_points):
+                values.append(i + 1)
+            for idx, value in enumerate(values):
+                model.set_value(start, value)
+                model.eval()
+                if idx > 0:
+                    # one pipeline register
+                    assert model.get_value(end) == values[idx - 1]
+        assert os.path.getsize(filename) > 10
