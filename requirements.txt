@@ -1,4 +1,5 @@
 -e git://github.com/Kuree/gemstone.git#egg=gemstone
 -e git://github.com/Kuree/canal.git#egg=canal
+-e git://github.com/phanrahan/peak.git#egg=peak
 pyverilog
 pyvcd
