@@ -219,12 +219,12 @@ class InterconnectModelCompiler:
                 graph = ic.get_graph(node.width)
                 sink_node = InterconnectGraph.locate_node(graph, node)
                 for src_route in self._routes:
-                    src_node = InterconnectGraph.locate_node(graph,
+                    graph_ = ic.get_graph(src_route[0].width)
+                    src_node = InterconnectGraph.locate_node(graph_,
                                                              src_route[0])
                     if not isinstance(src_node, PortNode):
                         continue
-                    if src_node.width == node.width and \
-                            src_node.x == node.x and src_node.y == node.y:
-                        sink_node.add_edge(src_node)
+                    if src_node.x == node.x and src_node.y == node.y:
+                        sink_node.add_edge(src_node, force_connect=True)
 
         return graphs, nodes

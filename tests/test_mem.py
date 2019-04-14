@@ -1,5 +1,5 @@
 from crust.model import *
-from crust.pe import PeCore
+from crust.mem import MemoryCore
 from canal.util import *
 from canal.cyclone import *
 import pytest
@@ -22,7 +22,7 @@ def interconnect_route():
     cores = {}
     for x in range(chip_size):
         for y in range(chip_size):
-            cores[(x, y)] = PeCore()
+            cores[(x, y)] = MemoryCore()
 
     def create_core(xx: int, yy: int):
         return cores[(xx, yy)]
@@ -34,9 +34,8 @@ def interconnect_route():
         out_conn.append((side, SwitchBoxIO.SB_OUT))
 
     ics = {}
-    ports = {"data0": in_conn, "data1": in_conn, "out": out_conn,
-             "bit0": in_conn, "bit1": in_conn, "bit2": in_conn,
-             "outb": out_conn}
+    ports = {"data_in": in_conn, "wen": in_conn, "data_out": out_conn,
+             "valid": in_conn}
     for bit_width in bit_widths:
         ic = create_uniform_interconnect(chip_size, chip_size, bit_width,
                                          create_core,
@@ -54,12 +53,12 @@ def interconnect_route():
     first_path = []
     start_node = graph.get_sb(0, 0, SwitchBoxSide.WEST,
                               0, SwitchBoxIO.SB_IN)
-    next_node = graph.get_port(0, 0, "data0")
+    next_node = graph.get_port(0, 0, "data_in")
     first_path.append(start_node)
     first_path.append(next_node)
 
     second_path = []
-    port_out = graph.get_port(0, 0, "out")
+    port_out = graph.get_port(0, 0, "data_out")
     second_path.append(port_out)
     # route to a sb node
     next_node = graph.get_sb(0, 0, SwitchBoxSide.EAST, 0, SwitchBoxIO.SB_OUT)
@@ -74,32 +73,44 @@ def interconnect_route():
     next_node = graph.get_sb(1, 0, SwitchBoxSide.EAST, 0, SwitchBoxIO.SB_OUT)
     second_path.append(next_node)
 
-    # two paths
-    route_path = [first_path, second_path]
+    third_path = []
+    graph = interconnect.get_graph(1)
+    start_node = graph.get_sb(0, 0, SwitchBoxSide.NORTH,
+                              0, SwitchBoxIO.SB_IN)
+    next_node = graph.get_port(0, 0, "wen")
+    third_path.append(start_node)
+    third_path.append(next_node)
+
+    # three paths
+    route_path = [first_path, second_path, third_path]
 
     return interconnect, route_path
 
 
-@pytest.mark.parametrize("magic_value", [42])
-def test_add(interconnect_route, magic_value):
+@pytest.mark.parametrize("depth", [10])
+def test_add(interconnect_route, depth):
     interconnect, route_path = interconnect_route
 
     compiler = InterconnectModelCompiler(interconnect)
     compiler.configure_route(route_path)
-    compiler.set_core_instr(0, 0, f"add(wire, const_{magic_value}")
+    compiler.set_core_instr(0, 0, depth)
     # no instruction as we are using dummy
     model = compiler.compile()
 
     # poke values
-    first_path, second_path = route_path
+    first_path, second_path, third_path = route_path
     start = first_path[0]
+    wen = third_path[0]
     end = second_path[-1]
 
-    num_data_points = 10
+    num_data_points = depth * 2
     values = []
     for i in range(num_data_points):
         values.append(i + 1)
+
     for idx, value in enumerate(values):
         model.set_value(start, value)
+        model.set_value(wen, 1)
         model.eval()
-        assert model.get_value(end) == value + magic_value
+        if idx >= depth:
+            assert model.get_value(end) == values[idx - depth]

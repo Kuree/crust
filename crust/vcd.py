@@ -14,7 +14,7 @@ class ModelVCD:
         self.__top = "Top"
         # create variables in the model
         for node in model.nodes:
-            tile = f"{self.__top}.TILE_X{node.x}Y_{node.y}"
+            tile = f"{self.__top}.TILE_X{node.x}Y{node.y}"
             node_name = str(node)
             var = self._vcd.register_var(tile, node_name, "integer",
                                          size=node.width, init=0)
