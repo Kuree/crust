@@ -138,10 +138,11 @@ class InterconnectModelCompiler:
         graphs, nodes = self.__prune_graph(ic)
         cores = self.__get_cores()
         interface = self.__get_interface(ic.interface(), nodes)
+        self.__set_core_instr(ic)
         return InterconnectModel(graphs, nodes, interface, cores)
 
     def __set_core_instr(self, ic: Interconnect):
-        for (x, y), instr in self._core_instr:
+        for (x, y), instr in self._core_instr.items():
             tile = ic.tile_circuits[(x, y)]
             core = tile.core
             instr = self._core_instr[(x, y)]
