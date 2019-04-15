@@ -1,8 +1,8 @@
-from crust.model import *
+from delta.model import *
 from gemstone.common.dummy_core_magma import DummyCore
 from canal.util import *
 import pytest
-from crust.vcd import *
+from delta.vcd import *
 import tempfile
 import os
 

@@ -28,8 +28,8 @@ install:
     - pip install -e .
 
 script:
-    - pytest --codestyle crust
-             --cov crust
+    - pytest --codestyle delta
+             --cov delta
              --ignore=Genesis2/
              -v --cov-report term-missing tests
 

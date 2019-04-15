@@ -2,9 +2,9 @@ from setuptools import setup
 
 
 setup(
-    name='crust',
+    name='delta',
     packages=[
-        "crust"
+        "delta"
     ],
     install_requires=[
         "magma-lang",

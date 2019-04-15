@@ -2,7 +2,7 @@ from canal.interconnect import Interconnect, InterconnectGraph
 from canal.circuit import Node, RegisterNode, PortNode
 from typing import Dict, Set, Tuple, List, Union
 from gemstone.common.core import Core
-from crust.vcd import ModelVCD
+from delta.vcd import ModelVCD
 
 
 class InterconnectModel:

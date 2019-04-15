@@ -1,5 +1,5 @@
-from crust.model import *
-from crust.pe import PeCore
+from delta.model import *
+from delta.pe import PeCore
 from canal.util import *
 from canal.cyclone import *
 import pytest

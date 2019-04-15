@@ -1,5 +1,5 @@
-from crust.model import *
-from crust.mem import MemoryCore
+from delta.model import *
+from delta.mem import MemoryCore
 from canal.util import *
 from canal.cyclone import *
 import pytest
