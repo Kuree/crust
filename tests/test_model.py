@@ -37,7 +37,6 @@ def interconnect_route():
 
     with tempfile.TemporaryDirectory() as tempdir:
         _, route = pnr(interconnect, (netlist, bus), cwd=tempdir)
-        route = parse_routing_result(route, interconnect)
 
     # two paths
     route_path = [route["e0"][0], route["e1"][0], route["e2"][0]]

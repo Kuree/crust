@@ -1,99 +1,38 @@
 from delta.model import *
-from delta.mem import MemoryCore
-from canal.util import *
-from canal.cyclone import *
+from archipelago import pnr
 import pytest
+from delta.util import create_cgra
+import tempfile
 
 
 @pytest.fixture
 def interconnect_route():
-    addr_width = 8
-    data_width = 32
-    bit_widths = [1, 16]
     chip_size = 2
-    num_tracks = 2
 
-    tile_id_width = 16
-    track_length = 1
+    interconnect = create_cgra(chip_size, True, cores_input=None)
 
-    # creates all the cores here
-    # we don't want duplicated cores when snapping into different interconnect
-    # graphs
-    cores = {}
-    for x in range(chip_size):
-        for y in range(chip_size):
-            cores[(x, y)] = MemoryCore()
+    netlist = {"e0": [("I0", "io2f_16"), ("M0", "data_in")],
+               "e1": [("M0", "data_out"), ("I1", "f2io_16")],
+               "e2": [("i0", "io2f_1"), ("M0", "wen")]}
+    bus = {"e0": 16, "e1": 16, "e2": 1}
 
-    def create_core(xx: int, yy: int):
-        return cores[(xx, yy)]
+    with tempfile.TemporaryDirectory() as tempdir:
+        placement, route = pnr(interconnect, (netlist, bus), cwd=tempdir)
 
-    in_conn = []
-    out_conn = []
-    for side in SwitchBoxSide:
-        in_conn.append((side, SwitchBoxIO.SB_IN))
-        out_conn.append((side, SwitchBoxIO.SB_OUT))
+    # two paths
+    route_path = [route["e0"][0], route["e1"][0], route["e2"][0]]
 
-    ics = {}
-    ports = {"data_in": in_conn, "wen": in_conn, "data_out": out_conn,
-             "valid": in_conn}
-    for bit_width in bit_widths:
-        ic = create_uniform_interconnect(chip_size, chip_size, bit_width,
-                                         create_core,
-                                         ports,
-                                         {track_length: num_tracks},
-                                         SwitchBoxType.Disjoint)
-        ics[bit_width] = ic
-
-    interconnect = Interconnect(ics, addr_width, data_width, tile_id_width,
-                                lift_ports=True)
-
-    # manual route
-    # I wish I can use pycyclone here to do the automatic routing
-    graph = interconnect.get_graph(16)
-    first_path = []
-    start_node = graph.get_sb(0, 0, SwitchBoxSide.WEST,
-                              0, SwitchBoxIO.SB_IN)
-    next_node = graph.get_port(0, 0, "data_in")
-    first_path.append(start_node)
-    first_path.append(next_node)
-
-    second_path = []
-    port_out = graph.get_port(0, 0, "data_out")
-    second_path.append(port_out)
-    # route to a sb node
-    next_node = graph.get_sb(0, 0, SwitchBoxSide.EAST, 0, SwitchBoxIO.SB_OUT)
-    second_path.append(next_node)
-    # append a register as well
-    nodes = list(next_node)
-    assert len(nodes) == 1
-    next_node = nodes[0]
-    second_path.append(next_node)
-    next_node = list(next_node)[0]
-    second_path.append(next_node)
-    next_node = graph.get_sb(1, 0, SwitchBoxSide.EAST, 0, SwitchBoxIO.SB_OUT)
-    second_path.append(next_node)
-
-    third_path = []
-    graph = interconnect.get_graph(1)
-    start_node = graph.get_sb(0, 0, SwitchBoxSide.NORTH,
-                              0, SwitchBoxIO.SB_IN)
-    next_node = graph.get_port(0, 0, "wen")
-    third_path.append(start_node)
-    third_path.append(next_node)
-
-    # three paths
-    route_path = [first_path, second_path, third_path]
-
-    return interconnect, route_path
+    return interconnect, placement, route_path
 
 
 @pytest.mark.parametrize("depth", [10])
 def test_add(interconnect_route, depth):
-    interconnect, route_path = interconnect_route
+    interconnect, placement, route_path = interconnect_route
 
     compiler = InterconnectModelCompiler(interconnect)
     compiler.configure_route(route_path)
-    compiler.set_core_instr(0, 0, depth)
+    x, y = placement["M0"]
+    compiler.set_core_instr(x, y, depth)
     # no instruction as we are using dummy
     model = compiler.compile()
 

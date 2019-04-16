@@ -2,6 +2,6 @@
 -e git://github.com/Kuree/canal.git#egg=canal
 -e git://github.com/phanrahan/peak.git#egg=peak
 -e git://github.com/Kuree/karst.git#egg=karst
--e git://github.com/Kuree/archipelago.git#egg=archipelago
+archipelago
 pyverilog
 pyvcd
