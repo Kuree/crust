@@ -1,6 +1,8 @@
-from peak.pe1 import PE
-import peak.pe1.asm as asm
-from peak.pe1.mode import Mode
+from lassen.sim import gen_pe
+from lassen.isa import DATAWIDTH, gen_alu_type, gen_inst_type
+from lassen.asm import inst
+from lassen.family import gen_pe_type_family
+import lassen.mode as mode
 from .dummy_core import DummyCore
 import magma
 from hwtypes import BitVector
@@ -20,21 +22,14 @@ class PeCore(DummyCore):
             outb=magma.Out(magma.Bits[1]),
         )
 
-        self.pe = PE()
+        self.pe = gen_pe(BitVector.get_family())()
+        self.__family = gen_pe_type_family(BitVector.get_family())
+        alu_type = gen_alu_type(self.__family)
         self.op_map = {
-            "add": asm.add(),
-            "mult": asm.umult0(),
-            "ule": asm.ule(),
+            "add": alu_type.Add,
+            "mult": alu_type.Mult0,
         }
-        # notice that the peak functional model can't eval the register
-        # we have to take care of it by ourselves
-        self._reg_values = {"data0": 0, "data1": 0,
-                            "bit0": 0, "bit1": 0, "bit2": 0}
-        self._reg_mode = {"data0": Mode.BYPASS,
-                          "data1": Mode.BYPASS,
-                          "bit0": Mode.BYPASS,
-                          "bit1": Mode.BYPASS,
-                          "bit2": Mode.BYPASS}
+        self._instr = None
 
     def inputs(self):
         return [self.ports.data0, self.ports.data1, self.ports.bit0,
@@ -51,19 +46,34 @@ class PeCore(DummyCore):
         tokens = [x.strip() for x in tokens]
         op = tokens[0]
         assert op in self.op_map
-        self._instr = self.op_map[op]
+
+        mode_type = mode.gen_mode_type(self.__family)
 
         # based on the mode, we may want to use reg const or reg mode
         # this will not work for more than 3 inputs
         values = tokens[1:]
+        reg_modes = {"ra_mode": mode_type.BYPASS, "rb_mode": mode_type.BYPASS}
+        reg_values = {"ra_const": 0, "rb_const": 0}
         assert len(values) == 2
         for idx, var in enumerate(values):
             if var == "reg":
-                self._reg_mode[f"data{idx}"] = Mode.DELAY
+                if idx == 0:
+                    reg_modes["ra_mode"] = mode_type.VALID
+                else:
+                    reg_modes["rb_mode"] = mode_type.VALID
             elif "const" in var:
                 const_var = int(var.split("_")[-1])
-                self._reg_mode[f"data{idx}"] = Mode.CONST
-                self._reg_values[f"data{idx}"] = const_var
+                if idx == 0:
+                    reg_values["ra_const"] = const_var
+                    reg_modes["ra_mode"] = mode_type.CONST
+                else:
+                    reg_values["rb_const"] = const_var
+                    reg_modes["rb_mode"] = mode_type.CONST
+        alu_type = self.op_map[op]
+        kargs = {}
+        kargs.update(reg_modes)
+        kargs.update(reg_values)
+        self._instr = inst(alu_type, **kargs)
 
     def eval_model(self, **kargs):
         # FIXME
@@ -71,19 +81,9 @@ class PeCore(DummyCore):
         data0 = kargs["data0"] if "data0" in kargs else 0
         data1 = kargs["data1"] if "data1" in kargs else 0
 
-        val0 = data0 if self._reg_mode["data0"] == Mode.BYPASS \
-            else self._reg_values["data0"]
-        val1 = data1 if self._reg_mode["data1"] == Mode.BYPASS \
-            else self._reg_values["data1"]
-
         assert self._instr is not None
-        data = BitVector[16]
-        res, res_p, irq = self.pe(self._instr, data(val0), data(val1))
-
-        if self._reg_mode["data0"] == Mode.DELAY:
-            self._reg_values["data0"] = data0
-        if self._reg_mode["data1"] == Mode.DELAY:
-            self._reg_mode["data1"] = data1
+        data = BitVector[DATAWIDTH]
+        res, res_p, irq = self.pe(self._instr, data(data0), data(data1))
 
         return {"out": int(res), "outb": bool(res_p)}
 
