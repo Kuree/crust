@@ -1,8 +1,7 @@
 from lassen.sim import gen_pe
-from lassen.isa import DATAWIDTH, gen_alu_type, gen_inst_type
-from lassen.asm import inst
-from lassen.family import gen_pe_type_family
-import lassen.mode as mode
+from lassen.isa import DATAWIDTH
+
+
 from .dummy_core import DummyCore
 import magma
 from hwtypes import BitVector
@@ -23,12 +22,7 @@ class PeCore(DummyCore):
         )
 
         self.pe = gen_pe(BitVector.get_family())()
-        self.__family = gen_pe_type_family(BitVector.get_family())
-        alu_type = gen_alu_type(self.__family)
-        self.op_map = {
-            "add": alu_type.Add,
-            "mult": alu_type.Mult0,
-        }
+
         self._instr = None
 
     def inputs(self):
@@ -38,42 +32,8 @@ class PeCore(DummyCore):
     def outputs(self):
         return [self.ports.out, self.ports.outb]
 
-    def configure_model(self, instr: str):
-        # instr is a string
-        # FIXME: fix this re hack
-        import re
-        tokens = re.split(r"[(),]", instr)
-        tokens = [x.strip() for x in tokens]
-        op = tokens[0]
-        assert op in self.op_map
-
-        mode_type = mode.gen_mode_type(self.__family)
-
-        # based on the mode, we may want to use reg const or reg mode
-        # this will not work for more than 3 inputs
-        values = tokens[1:]
-        reg_modes = {"ra_mode": mode_type.BYPASS, "rb_mode": mode_type.BYPASS}
-        reg_values = {"ra_const": 0, "rb_const": 0}
-        assert len(values) == 2
-        for idx, var in enumerate(values):
-            if var == "reg":
-                if idx == 0:
-                    reg_modes["ra_mode"] = mode_type.VALID
-                else:
-                    reg_modes["rb_mode"] = mode_type.VALID
-            elif "const" in var:
-                const_var = int(var.split("_")[-1])
-                if idx == 0:
-                    reg_values["ra_const"] = const_var
-                    reg_modes["ra_mode"] = mode_type.CONST
-                else:
-                    reg_values["rb_const"] = const_var
-                    reg_modes["rb_mode"] = mode_type.CONST
-        alu_type = self.op_map[op]
-        kargs = {}
-        kargs.update(reg_modes)
-        kargs.update(reg_values)
-        self._instr = inst(alu_type, **kargs)
+    def configure_model(self, instr):
+        self._instr = instr
 
     def eval_model(self, **kargs):
         # FIXME
