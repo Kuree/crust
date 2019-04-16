@@ -28,7 +28,7 @@ def interconnect_route():
                  (chip_size + 1, chip_size + 1)]:
         cores[(x, y)] = None
 
-    interconnect = create_cgra(chip_size, True, cores=cores)
+    interconnect = create_cgra(chip_size, True, cores_input=cores)
 
     netlist = {"e0": [("I0", "io2f_16"), ("r0", "reg")],
                "e1": [("r0", "reg"), ("D0", "data_in_16b")],
