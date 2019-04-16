@@ -1,4 +1,5 @@
 from delta.model import *
+from karst.core import MemoryInstruction, MemoryMode
 from archipelago import pnr
 import pytest
 from delta.util import create_cgra
@@ -32,7 +33,8 @@ def test_add(interconnect_route, depth):
     compiler = InterconnectModelCompiler(interconnect)
     compiler.configure_route(route_path)
     x, y = placement["M0"]
-    compiler.set_core_instr(x, y, depth)
+    instr = MemoryInstruction(MemoryMode.RowBuffer, {"depth": depth})
+    compiler.set_core_instr(x, y, instr)
     # no instruction as we are using dummy
     model = compiler.compile()
 
