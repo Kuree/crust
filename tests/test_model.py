@@ -6,7 +6,6 @@ import tempfile
 import os
 from delta.util import *
 from archipelago import pnr
-from canal.pnr_io import parse_routing_result
 
 
 @pytest.fixture

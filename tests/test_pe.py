@@ -20,8 +20,7 @@ def interconnect_route():
                "e1": [("p0", "out"), ("I1", "f2io_16")]}
     bus = {"e0": 16, "e1": 16}
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        placement, route = pnr(interconnect, (netlist, bus), cwd=tempdir)
+    placement, route = pnr(interconnect, (netlist, bus))
 
     # two paths
     route_path = [route["e0"][0], route["e1"][0]]

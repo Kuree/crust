@@ -1,5 +1,6 @@
 from karst.core import MemoryCore as KarstCore, MemoryInstruction
 from .dummy_core import DummyCore
+from gemstone.common.core import PnRTag
 import magma
 
 
@@ -33,3 +34,6 @@ class MemoryCore(DummyCore):
 
     def name(self):
         return "MEMCore"
+
+    def pnr_info(self):
+        return PnRTag("m", self.DEFAULT_PRIORITY, self.DEFAULT_PRIORITY - 1)

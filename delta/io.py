@@ -2,7 +2,7 @@
 """
 
 import magma
-from gemstone.common.core import Core
+from gemstone.common.core import Core, PnRTag
 
 
 class IO1bit(Core):
@@ -37,6 +37,9 @@ class IO1bit(Core):
 
         return {"io2glb": io2glb, "io2f_1": io2f_1}
 
+    def pnr_info(self):
+        return PnRTag("i", 0, self.DEFAULT_PRIORITY - 1)
+
 
 class IO16bit(Core):
     def __init__(self):
@@ -69,3 +72,6 @@ class IO16bit(Core):
         io2f_16 = glb2io
 
         return {"io2glb": io2glb, "io2f_16": io2f_16}
+
+    def pnr_info(self):
+        return PnRTag("I", 0, self.DEFAULT_PRIORITY)

@@ -1,7 +1,6 @@
 from lassen.sim import gen_pe
 from lassen.isa import DATAWIDTH
-
-
+from gemstone.common.core import PnRTag
 from .dummy_core import DummyCore
 import magma
 from hwtypes import BitVector
@@ -49,3 +48,6 @@ class PeCore(DummyCore):
 
     def name(self):
         return "PECore"
+
+    def pnr_info(self):
+        return PnRTag("p", self.DEFAULT_PRIORITY, self.DEFAULT_PRIORITY)

@@ -1,5 +1,5 @@
 from canal.interconnect import Interconnect
-from canal.util import create_uniform_interconnect, SwitchBoxType
+from canal.util import create_uniform_interconnect, SwitchBoxType, IOSide
 from canal.cyclone import SwitchBoxSide, SwitchBoxIO
 from .io import IO16bit, IO1bit
 from .mem import MemoryCore
@@ -84,6 +84,8 @@ def create_cgra(chip_size: int, add_io: bool = False, cores_input=None):
         pipeline_regs = []
     ics = {}
 
+    sides = IOSide.North | IOSide.East | IOSide.South | IOSide.West
+
     io_in = {"f2io_1": [1], "f2io_16": [0]}
     io_out = {"io2f_1": [1], "io2f_16": [0]}
     for bit_width in bit_widths:
@@ -97,12 +99,10 @@ def create_cgra(chip_size: int, add_io: bool = False, cores_input=None):
                                          {track_length: num_tracks},
                                          SwitchBoxType.Disjoint,
                                          pipeline_regs,
-                                         margin=margin,
+                                         io_sides=sides,
                                          io_conn=io_conn)
         ics[bit_width] = ic
 
-    lift_ports = margin == 0
-    interconnect = Interconnect(ics, addr_width, data_width, tile_id_width,
-                                lift_ports=lift_ports)
+    interconnect = Interconnect(ics, addr_width, data_width, tile_id_width)
 
     return interconnect
