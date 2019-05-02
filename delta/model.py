@@ -125,9 +125,16 @@ class InterconnectModelCompiler:
         self._routes: List[List[Node]] = []
         self._core_instr = {}
 
-    def configure_route(self, routes: List[List[Node]]):
+    def configure_route(self, routes: Union[List[List[Node]],
+                                            Dict[str, List[List[Node]]]]):
         # store the configuration
-        self._routes = routes
+        if isinstance(routes, dict):
+            result = []
+            for r in routes.values():
+                result += r
+            self._routes = result
+        else:
+            self._routes = routes
 
     def set_core_instr(self, x: int, y: int, instr):
         self._core_instr[(x, y)] = instr
