@@ -11,7 +11,7 @@ class MemoryCore(DummyCore):
         self.add_ports(
             data_in=magma.In(magma.Bits[16]),
             data_out=magma.Out(magma.Bits[16]),
-            addr_in=magma.In(magma.Bits[16]),
+            addr=magma.In(magma.Bits[16]),
             ren=magma.In(magma.Bits[1]),
             wen=magma.In(magma.Bits[1]),
             valid=magma.Out(magma.Bits[1])
@@ -23,11 +23,11 @@ class MemoryCore(DummyCore):
         self._data_out_value = 0
 
     def inputs(self):
-        return [self.ports.data_in, self.ports.wen, self.ports.ren,
-                self.ports.addr_in]
+        return [self.ports["data_in"], self.ports["wen"], self.ports["ren"],
+                self.ports["addr"]]
 
     def outputs(self):
-        return [self.ports.data_out, self.ports.valid]
+        return [self.ports["data_out"], self.ports["valid"]]
 
     def configure_model(self, instr: MemoryInstruction):
         self.core.configure(instr)

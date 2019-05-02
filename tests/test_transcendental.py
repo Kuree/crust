@@ -14,8 +14,8 @@ def interconnect_route():
 
     netlist = {"e0": [("I0", "io2f_16"), ("p0", "data0")],
                "e1": [("I1", "io2f_16"), ("p0", "data1")],
-               "e2": [("p0", "out"), ("m1", "addr_in")],
-               "e3": [("m1", "data_out"), ("I2", "f2io_16")],
+               "e2": [("p0", "out"), ("m0", "addr")],
+               "e3": [("m0", "data_out"), ("I2", "f2io_16")],
                "e4": [("i0", "io2f_1"), ("m0", "ren")]}
     bus = {"e0": 16, "e1": 16, "e2": 16, "e3": 16, "e4": 1}
 
@@ -54,8 +54,9 @@ def test_add(interconnect_route):
     # set ren to high all the time
     model.set_value(input_3, 1)
 
-    for value in range(10):
+    for idx, value in enumerate(range(10)):
         model.set_value(input_1, value)
         model.set_value(input_2, value)
         model.eval()
-        # assert model.get_value(end) == value + value + 42
+        if idx > 0:
+            assert model.get_value(end) == value + value + 42 - 2

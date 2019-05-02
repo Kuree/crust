@@ -2,10 +2,12 @@
 """
 
 import magma
-from gemstone.common.core import Core, PnRTag
+from gemstone.common.core import PnRTag
+
+from delta.dummy_core import DummyCore
 
 
-class IO1bit(Core):
+class IO1bit(DummyCore):
     def __init__(self):
         super().__init__()
         TBit = magma.Bits[1]
@@ -16,14 +18,12 @@ class IO1bit(Core):
             io2f_1=magma.Out(TBit),
             f2io_1=magma.In(TBit)
         )
-        self.wire(self.ports.glb2io, self.ports.io2f_1)
-        self.wire(self.ports.f2io_1, self.ports.io2glb)
 
     def inputs(self):
-        return [self.ports.glb2io, self.ports.f2io_1]
+        return [self.ports["glb2io"], self.ports["f2io_1"]]
 
     def outputs(self):
-        return [self.ports.io2glb, self.ports.io2f_1]
+        return [self.ports["io2glb"], self.ports["io2f_1"]]
 
     def name(self):
         return "io1bit"
@@ -41,7 +41,7 @@ class IO1bit(Core):
         return PnRTag("i", 0, self.DEFAULT_PRIORITY - 1)
 
 
-class IO16bit(Core):
+class IO16bit(DummyCore):
     def __init__(self):
         super().__init__()
         TBit = magma.Bits[16]
@@ -52,14 +52,12 @@ class IO16bit(Core):
             io2f_16=magma.Out(TBit),
             f2io_16=magma.In(TBit)
         )
-        self.wire(self.ports.glb2io, self.ports.io2f_16)
-        self.wire(self.ports.f2io_16, self.ports.io2glb)
 
     def inputs(self):
-        return [self.ports.glb2io, self.ports.f2io_16]
+        return [self.ports["glb2io"], self.ports["f2io_16"]]
 
     def outputs(self):
-        return [self.ports.io2glb, self.ports.io2f_16]
+        return [self.ports["io2glb"], self.ports["io2f_16"]]
 
     def name(self):
         return "io16bit"

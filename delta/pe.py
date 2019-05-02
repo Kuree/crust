@@ -25,11 +25,11 @@ class PeCore(DummyCore):
         self._instr = None
 
     def inputs(self):
-        return [self.ports.data0, self.ports.data1, self.ports.bit0,
-                self.ports.bit1, self.ports.bit2]
+        return [self.ports["data0"], self.ports["data1"], self.ports["bit0"],
+                self.ports["bit1"], self.ports["bit2"]]
 
     def outputs(self):
-        return [self.ports.out, self.ports.outb]
+        return [self.ports["out"], self.ports["outb"]]
 
     def configure_model(self, instr):
         self._instr = instr

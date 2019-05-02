@@ -62,7 +62,7 @@ def create_cgra(chip_size: int, add_io: bool = False, cores_input=None):
     # specify input and output port connections
     inputs = ["data0", "data1", "bit0", "bit1", "bit2", "data_in",
               "addr_in", "flush", "ren_in", "wen_in", "data_in_16b", "wen",
-              "ren"]
+              "ren", "addr"]
     outputs = ["out", "outb", "data_out", "data_out_16b"]
     # this is slightly different from the chip we tape out
     # here we connect input to every SB_IN and output to every SB_OUT
